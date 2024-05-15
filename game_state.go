@@ -24,7 +24,7 @@ func NewState(data GameState) *State {
 		Turn:          data.Turn,
 		Snakes:        data.Board.Snakes,
 		Board:         map[string]int{"width": data.Board.Width, "height": data.Board.Height},
-		CurrentPlayer: 1,
+		CurrentPlayer: 0,
 	}
 }
 
@@ -39,6 +39,13 @@ func (s *State) GetPossibleActions() []string {
 	return possibleActions
 }
 
+func (s *State) GetPossibleActionsForPlayer(playerID string) []string {
+	possibleActions := []string{"up", "down", "left", "right"}
+	s.AvoidWallsForPlayer(&possibleActions, playerID)
+	s.AvoidBodyForPlayer(&possibleActions, playerID)
+	return possibleActions
+}
+
 func (s *State) AvoidWalls(possibleActions *[]string) {
 	if s.Board["width"]-s.Head.X == 1 {
 		removeAction("right", possibleActions)
@@ -50,6 +57,28 @@ func (s *State) AvoidWalls(possibleActions *[]string) {
 		removeAction("up", possibleActions)
 	}
 	if s.Head.Y == 0 {
+		removeAction("down", possibleActions)
+	}
+}
+
+func (s *State) AvoidWallsForPlayer(possibleActions *[]string, playerID string) {
+	var playerHead Coord
+	for _, snake := range s.Snakes {
+		if snake.ID == playerID {
+			playerHead = snake.Head
+			break
+		}
+	}
+	if s.Board["width"]-playerHead.X == 1 {
+		removeAction("right", possibleActions)
+	}
+	if playerHead.X == 0 {
+		removeAction("left", possibleActions)
+	}
+	if s.Board["height"]-playerHead.Y == 1 {
+		removeAction("up", possibleActions)
+	}
+	if playerHead.Y == 0 {
 		removeAction("down", possibleActions)
 	}
 }
@@ -116,7 +145,44 @@ func (s *State) AvoidBody(possibleActions *[]string) {
 	if len(*possibleActions) == 0 {
 		*possibleActions = removedActions
 	}
+}
 
+func (s *State) AvoidBodyForPlayer(possibleActions *[]string, playerID string) {
+	var playerHead Coord
+	for _, snake := range s.Snakes {
+		if snake.ID == playerID {
+			playerHead = snake.Head
+			break
+		}
+	}
+
+	left := Coord{playerHead.X - 1, playerHead.Y}
+	right := Coord{playerHead.X + 1, playerHead.Y}
+	up := Coord{playerHead.X, playerHead.Y + 1}
+	down := Coord{playerHead.X, playerHead.Y - 1}
+
+	var removedActions []string
+	for _, snake := range s.Snakes {
+		snakeNoTail := snake.Body
+		snakeNoTail = snakeNoTail[:len(snakeNoTail)-1]
+
+		if contains(left, snakeNoTail) {
+			removeAction("left", possibleActions)
+		}
+		if contains(right, snakeNoTail) {
+			removeAction("right", possibleActions)
+		}
+		if contains(up, snakeNoTail) {
+			removeAction("up", possibleActions)
+		}
+		if contains(down, snakeNoTail) {
+			removeAction("down", possibleActions)
+		}
+	}
+
+	if len(*possibleActions) == 0 {
+		*possibleActions = removedActions
+	}
 }
 
 func (s *State) TakeAction(action string) *State {
@@ -146,6 +212,47 @@ func (s *State) TakeAction(action string) *State {
 	}
 
 	nextState.Turn++
+	nextState.CurrentPlayer = (nextState.CurrentPlayer + 1) % len(nextState.Snakes)
+
+	return nextState
+}
+
+func (s *State) TakeActionForPlayer(action string, playerID string) *State {
+	nextState := DeepCopyState(s)
+	var playerIndex int
+	for i, snake := range nextState.Snakes {
+		if snake.ID == playerID {
+			playerIndex = i
+			switch action {
+			case "up":
+				nextState.Snakes[i].Head.Y++
+			case "down":
+				nextState.Snakes[i].Head.Y--
+			case "right":
+				nextState.Snakes[i].Head.X++
+			case "left":
+				nextState.Snakes[i].Head.X--
+			default:
+				panic("Invalid Action!")
+			}
+
+			nextState.Snakes[i].Body = append([]Coord{nextState.Snakes[i].Head}, nextState.Snakes[i].Body...)
+			nextState.Snakes[i].Body = nextState.Snakes[i].Body[:len(nextState.Snakes[i].Body)-1]
+
+			if contains(nextState.Snakes[i].Head, nextState.Food) {
+				nextState.Snakes[i].Health = 100
+				nextState.Food = removePosition(nextState.Snakes[i].Head, nextState.Food)
+				nextState.Snakes[i].Body = append(nextState.Snakes[i].Body, nextState.Snakes[i].Body[len(nextState.Snakes[i].Body)-1])
+			} else {
+				nextState.Snakes[i].Health--
+			}
+
+			break
+		}
+	}
+
+	nextState.Turn++
+	nextState.CurrentPlayer = (playerIndex + 1) % len(nextState.Snakes)
 
 	return nextState
 }
