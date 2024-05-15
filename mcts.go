@@ -11,7 +11,7 @@ const NUM_ITERATIONS = 100
 func Traverse(node *Node) *Node {
 	for len(node.children) > 0 {
 		if node.isFullyExpanded {
-			node = node.BestChild(1.4)
+			node = node.BestChild(14)
 		} else {
 			return Expand(node)
 		}
@@ -73,7 +73,7 @@ func GetNextMove(gameState GameState) string {
 	i := 0
 	currentTime := time.Now()
 	startTime := time.Now()
-	for currentTime.Sub(startTime) < 400*time.Millisecond {
+	for currentTime.Sub(startTime) < 360*time.Millisecond {
 		lastNode := Traverse(rootNode)
 		newNode := Expand(lastNode)
 		reward := Simulate(newNode)
@@ -82,6 +82,7 @@ func GetNextMove(gameState GameState) string {
 		i++
 	}
 
+	fmt.Println("Time: ", currentTime.Sub(startTime))
 	fmt.Println("Num iterations: ", i)
 
 	return rootNode.BestAction()

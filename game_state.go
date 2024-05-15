@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 type State struct {
 	MyID          string
 	Snake         []Coord
@@ -58,6 +60,7 @@ func (s *State) AvoidBody(possibleActions *[]string) {
 	up := Coord{s.Head.X, s.Head.Y + 1}
 	down := Coord{s.Head.X, s.Head.Y - 1}
 
+	var removedActions []string
 	for _, snake := range s.Snakes {
 		snakeNoTail := snake.Body
 		snakeNoTail = snakeNoTail[:len(snakeNoTail)-1]
@@ -74,16 +77,46 @@ func (s *State) AvoidBody(possibleActions *[]string) {
 		if contains(down, snakeNoTail) {
 			removeAction("down", possibleActions)
 		}
-		// if snake.ID == s.MyID {
-		// 	continue
-		// } else {
-		// 	if len(snake.Body) > len(s.Snake) {
-		// 		if equals(left, snake.Body[0])
-		// 			removeAction("left", possibleActions)
-		// 		if
-		// 	}
-		// }
+
+		if snake.ID == s.MyID {
+			continue
+		} else {
+			if len(snake.Body) >= len(s.Snake) {
+				// Check left direction
+				dLeft := math.Abs(float64(left.X-snake.Head.X)) + math.Abs(float64(left.Y-snake.Head.Y))
+				if dLeft <= 1 {
+					removedActions = append(removedActions, "left")
+					removeAction("left", possibleActions)
+				}
+
+				// Check right direction
+				dRight := math.Abs(float64(right.X-snake.Head.X)) + math.Abs(float64(right.Y-snake.Head.Y))
+				if dRight <= 1 {
+					removedActions = append(removedActions, "right")
+					removeAction("right", possibleActions)
+				}
+
+				// Check up direction
+				dUp := math.Abs(float64(up.X-snake.Head.X)) + math.Abs(float64(up.Y-snake.Head.Y))
+				if dUp <= 1 {
+					removedActions = append(removedActions, "up")
+					removeAction("up", possibleActions)
+				}
+
+				// Check down direction
+				dDown := math.Abs(float64(down.X-snake.Head.X)) + math.Abs(float64(down.Y-snake.Head.Y))
+				if dDown <= 1 {
+					removedActions = append(removedActions, "down")
+					removeAction("down", possibleActions)
+				}
+			}
+		}
 	}
+
+	if len(*possibleActions) == 0 {
+		*possibleActions = removedActions
+	}
+
 }
 
 func (s *State) TakeAction(action string) *State {
