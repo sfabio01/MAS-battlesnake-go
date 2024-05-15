@@ -77,7 +77,7 @@ func Simulate(node *Node) int {
 		count++
 	}
 	// Return the reward for the final state after the simulation reaches a terminal state.
-	fmt.Println("Simulation depth: ", count)
+	// fmt.Println("Simulation depth: ", count)
 	return currentState.GetReward()
 }
 
@@ -94,7 +94,7 @@ func GetNextMove(gameState GameState) string {
 	i := 0
 	currentTime := time.Now()
 	startTime := time.Now()
-	for currentTime.Sub(startTime) < 360*time.Millisecond {
+	for currentTime.Sub(startTime) < 300*time.Millisecond {
 		lastNode := Traverse(rootNode)
 		newNode := Expand(lastNode)
 		reward := Simulate(newNode)

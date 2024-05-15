@@ -4,6 +4,7 @@ import "math"
 
 type State struct {
 	MyID          string
+	MySnakeIDs    []string
 	Snake         []Coord
 	Head          Coord
 	Health        int
@@ -15,8 +16,16 @@ type State struct {
 }
 
 func NewState(data GameState) *State {
+	var mySnakeIDs []string
+	for _, s := range data.Board.Snakes {
+		if s.Name == data.You.Name && s.ID != data.You.ID {
+			mySnakeIDs = append(mySnakeIDs, s.ID)
+		}
+	}
+
 	return &State{
 		MyID:          data.You.ID,
+		MySnakeIDs:    mySnakeIDs,
 		Snake:         data.You.Body,
 		Head:          data.You.Head,
 		Health:        data.You.Health,
@@ -258,6 +267,7 @@ func (s *State) TakeActionForPlayer(action string, playerID string) *State {
 }
 
 func (s *State) IsTerminal() bool {
+
 	if len(s.GetPossibleActions()) == 0 || s.Health == 0 {
 		return true
 	}
@@ -265,10 +275,30 @@ func (s *State) IsTerminal() bool {
 }
 
 func (s *State) GetReward() int {
-	if s.IsTerminal() {
+	mySnakesAlive := 0
+	for _, snake := range s.Snakes {
+		for _, mysnakeID := range s.MySnakeIDs {
+			if snake.ID == mysnakeID && snake.Health > 0 {
+				mySnakesAlive++
+				break
+			}
+		}
+	}
+
+	if !s.IsTerminal() {
+		mySnakesAlive++
+	}
+
+	if mySnakesAlive == 2 {
+		// Both snakes are alive, give a high reward
+		return 1000000
+	} else if mySnakesAlive == 1 {
+		// One snake is alive, give a moderate reward
+		return s.Turn * 100
+	} else {
+		// No snake is alive, give a low reward
 		return s.Turn
 	}
-	return 1000000
 }
 
 func toPositionSlice(data []interface{}) []Coord {
