@@ -1,6 +1,9 @@
 package main
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 type State struct {
 	MyID          string
@@ -18,7 +21,7 @@ type State struct {
 func NewState(data GameState) *State {
 	var mySnakeIDs []string
 	for _, s := range data.Board.Snakes {
-		if s.Name == data.You.Name && s.ID != data.You.ID {
+		if strings.Contains(s.Name, "Group18") && s.ID != data.You.ID {
 			mySnakeIDs = append(mySnakeIDs, s.ID)
 		}
 	}
