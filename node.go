@@ -55,7 +55,7 @@ func (n *Node) BestChild(cParam float64) *Node {
 func (n *Node) BestAction() string {
 	var maxAction string
 	maxScore := math.Inf(-1)
-	fmt.Println(n.children)
+	// fmt.Println(n.children)
 	for action, child := range n.children {
 		score := child.winScore / float64(child.visitCount)
 		if score > maxScore {

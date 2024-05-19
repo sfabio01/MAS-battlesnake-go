@@ -94,7 +94,7 @@ func GetNextMove(gameState GameState) string {
 	i := 0
 	currentTime := time.Now()
 	startTime := time.Now()
-	for currentTime.Sub(startTime) < 300*time.Millisecond {
+	for currentTime.Sub(startTime) < 200*time.Millisecond {
 		lastNode := Traverse(rootNode)
 		newNode := Expand(lastNode)
 		reward := Simulate(newNode)
